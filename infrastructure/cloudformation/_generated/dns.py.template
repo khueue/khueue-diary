@@ -1,0 +1,47 @@
+{
+    "Resources": {
+        "HostedZone": {
+            "Properties": {
+                "Name": "khueue.com."
+            },
+            "Type": "AWS::Route53::HostedZone"
+        },
+        "RecordSetGroup": {
+            "Properties": {
+                "HostedZoneId": {
+                    "Ref": "HostedZone"
+                },
+                "RecordSets": [
+                    {
+                        "Name": "mage.khueue.com.",
+                        "ResourceRecords": [
+                            "ns-826.awsdns-39.net.",
+                            "ns-1895.awsdns-44.co.uk.",
+                            "ns-200.awsdns-25.com.",
+                            "ns-1422.awsdns-49.org."
+                        ],
+                        "TTL": 300,
+                        "Type": "NS"
+                    },
+                    {
+                        "AliasTarget": {
+                            "DNSName": "dqhvp77ter579.cloudfront.net.",
+                            "HostedZoneId": "Z2FDTNDATAQYW2"
+                        },
+                        "Name": "khueue.com.",
+                        "Type": "A"
+                    },
+                    {
+                        "AliasTarget": {
+                            "DNSName": "dqhvp77ter579.cloudfront.net.",
+                            "HostedZoneId": "Z2FDTNDATAQYW2"
+                        },
+                        "Name": "khueue.com.",
+                        "Type": "AAAA"
+                    }
+                ]
+            },
+            "Type": "AWS::Route53::RecordSetGroup"
+        }
+    }
+}

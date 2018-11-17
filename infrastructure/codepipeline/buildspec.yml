@@ -1,0 +1,14 @@
+version: 0.2
+phases:
+  build:
+    commands:
+    - docker build \
+        --tag khueue-diary-codepipeline \
+        --file ./infrastructure/codepipeline/Dockerfile \
+        ./
+    - docker run \
+        --rm \
+        --env AWS_DEFAULT_REGION \
+        --env AWS_CONTAINER_CREDENTIALS_RELATIVE_URI \
+        khueue-diary-codepipeline \
+        npm run app-build-and-deploy
