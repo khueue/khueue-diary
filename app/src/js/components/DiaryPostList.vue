@@ -11,6 +11,7 @@ export default {
 			currentUser: null,
 			unsubscriber: null,
 			newEntry: null,
+			isAuthoring: false,
 		};
 	},
 	components: {
@@ -31,6 +32,7 @@ export default {
 				self.unsubscribeToFirestoreSnapshots();
 			}
 		});
+		self.authorNewPost();
 	},
 	methods: {
 		signInWithGoogle() {
@@ -41,6 +43,10 @@ export default {
 			firebase.auth().signOut();
 		},
 		saveEntry(entry) {
+			if (!entry.message) {
+				this.deleteEntry(entry);
+				return;
+			}
 			const self = this;
 			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
 			if (entry.id) {
@@ -65,6 +71,9 @@ export default {
 			}
 		},
 		deleteEntry(entry) {
+			if (!entry.id) {
+				return;
+			}
 			const self = this;
 			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
 			entriesColl.doc(entry.id).delete()
@@ -76,20 +85,23 @@ export default {
 		},
 		cancelNewPost(entry) {
 			const self = this;
-			self.newEntry = null;
+			self.isAuthoring = false;
 		},
-		editNewEntry() {
+		authorNewPost() {
 			const self = this;
-			self.newEntry = {
-				meta: {},
-				isEditing: true,
-				message: null,
-			};
+			self.isAuthoring = true;
+			if (!self.newEntry) {
+				self.newEntry = {
+					meta: {},
+					isEditing: true,
+					message: null,
+				};
+			}
 		},
 		subscribeToFirestoreSnapshots() {
 			const self = this;
 			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
-			self.unsubscriber = entriesColl.orderBy('meta.createdAt', 'desc').limit(100).onSnapshot(function(snapshot) {
+			self.unsubscriber = entriesColl.orderBy('meta.createdAt', 'asc').limit(100).onSnapshot(function(snapshot) {
 				const entries = [];
 				snapshot.forEach(function(snap) {
 					const entry = self.newEntryFromSnapshot(snap);
@@ -128,7 +140,7 @@ export default {
 
 <template lang="pug">
 #app
-	.hero.is-fullheight.is-dark
+	.hero.is-fullheight
 		.hero-head
 			.container.is-pulled-right
 				.field
@@ -139,26 +151,31 @@ export default {
 							.signed-in(key="signed-out" v-else)
 								button.button(@click="signOut") Sign out ({{ currentUser.email }})
 		.hero-body
-			.container(v-if="currentUser")
-				button.button(@click="editNewEntry") Add new entry
-				DiaryPost(
-					v-if="newEntry"
-					:entry="newEntry"
-					@save="saveEntry"
-					@delete-entry="deleteEntry"
-					@cancel-post="cancelNewPost"
-				)
-				transition-group(v-if="entries.length > 0" name="entry-list")
-					DiaryPost(
-						v-for="entry in entries"
-						:key="entry.renderKey"
-						:entry="entry"
-						@save="saveEntry"
-						@delete-entry="deleteEntry"
-					)
-				.empty(v-else) No entries!
-			.container(v-else)
-				p You need to sign in!
+			.container
+				.columns.is-centered
+					.column.is-two-thirds(v-if="currentUser")
+						transition-group(v-if="entries.length > 0" name="entry-list")
+							DiaryPost(
+								v-for="entry in entries"
+								:key="entry.renderKey"
+								:entry="entry"
+								@save="saveEntry"
+								@delete-entry="deleteEntry"
+							)
+						p(v-else) No entries!
+
+						.wrapper
+							DiaryPost(
+								v-show="isAuthoring"
+								:entry="newEntry"
+								@save="saveEntry"
+								@delete-entry="deleteEntry"
+								@cancel-post="cancelNewPost"
+							)
+						b-field(v-if="!isAuthoring")
+							button.button(@click="authorNewPost") New Post
+					.column.is-two-thirds(v-else)
+						p You need to sign in!
 		.hero-foot
 </template>
 
