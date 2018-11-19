@@ -5,10 +5,16 @@ import db from '/js/firebase/db';
 import DiaryPost from '/js/components/DiaryPost.vue';
 
 export default {
+	name: 'DiaryPostList',
+	props: {
+		user: {
+			required: true,
+		},
+	},
 	data() {
 		return {
-			entries: [],
 			currentUser: null,
+			entries: [],
 			unsubscriber: null,
 			newEntry: null,
 			isAuthoring: false,
@@ -17,31 +23,25 @@ export default {
 	components: {
 		DiaryPost,
 	},
-	created() {
-		const self = this;
-		firebase.auth().onAuthStateChanged(function(user) {
-			self.currentUser = null;
-			self.entries = [];
-			if (user) {
-				self.currentUser = {
-					uid: user.uid,
-					email: user.email,
-				};
+	watch: {
+		user: {
+			handler: function(newVal, oldVal) {
+				console.log('watch:user', newVal);
+				this.currentUser = newVal;
+			},
+		},
+		currentUser: function(newVal, oldVal) {
+			const self = this;
+			console.log('old and new', oldVal, newVal);
+			if (newVal) {
+				console.log('GOING FOR IT');
 				self.subscribeToFirestoreSnapshots();
 			} else {
 				self.unsubscribeToFirestoreSnapshots();
 			}
-		});
-		self.authorNewPost();
+		},
 	},
 	methods: {
-		signInWithGoogle() {
-			var provider = new firebase.auth.GoogleAuthProvider();
-			firebase.auth().signInWithPopup(provider);
-		},
-		signOut() {
-			firebase.auth().signOut();
-		},
 		saveEntry(entry) {
 			if (!entry.message) {
 				this.deleteEntry(entry);
@@ -100,6 +100,7 @@ export default {
 		},
 		subscribeToFirestoreSnapshots() {
 			const self = this;
+			console.log('currentUser', self.currentUser);
 			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
 			self.unsubscriber = entriesColl.orderBy('meta.createdAt', 'asc').limit(100).onSnapshot(function(snapshot) {
 				const entries = [];
@@ -108,6 +109,7 @@ export default {
 					entries.push(entry);
 				});
 				self.entries = entries;
+				console.log(self.entries.length);
 			}, function (error) {
 				console.log(error);
 			});
@@ -139,54 +141,33 @@ export default {
 </script>
 
 <template lang="pug">
-#app
-	.hero.is-fullheight
-		.hero-head
-			.container.is-pulled-right
-				.field
-					.control.sign-in-control
-						transition(name="fade")
-							.signed-out(key="signed-in" v-if="!currentUser")
-								button.button(@click="signInWithGoogle") Sign in
-							.signed-in(key="signed-out" v-else)
-								button.button(@click="signOut") Sign out ({{ currentUser.email }})
-		.hero-body
-			.container
-				.columns.is-centered
-					.column.is-two-thirds(v-if="currentUser")
-						transition-group(v-if="entries.length > 0" name="entry-list")
-							DiaryPost(
-								v-for="entry in entries"
-								:key="entry.renderKey"
-								:entry="entry"
-								@save="saveEntry"
-								@delete-entry="deleteEntry"
-							)
-						p(v-else) No entries!
+.diary-post-list
+	.wrapper(v-if="user")
+		p(v-if="!entries.length") No entries!
+		transition-group(v-else name="entry-list")
+			DiaryPost(
+				v-for="entry in entries"
+				:key="entry.renderKey"
+				:entry="entry"
+				:user="currentUser"
+				@save="saveEntry"
+				@delete-entry="deleteEntry"
+			)
+	.p(v-else) Sign in!
 
-						.wrapper
-							DiaryPost(
-								v-show="isAuthoring"
-								:entry="newEntry"
-								@save="saveEntry"
-								@delete-entry="deleteEntry"
-								@cancel-post="cancelNewPost"
-							)
-						b-field(v-if="!isAuthoring")
-							button.button(@click="authorNewPost") New Post
-					.column.is-two-thirds(v-else)
-						p You need to sign in!
-		.hero-foot
+	// .wrapper
+	// 	DiaryPost(
+	// 		v-show="isAuthoring"
+	// 		:entry="newEntry"
+	// 		@save="saveEntry"
+	// 		@delete-entry="deleteEntry"
+	// 		@cancel-post="cancelNewPost"
+	// 	)
+	// b-field(v-if="!isAuthoring")
+	// 	button.button(@click="authorNewPost") New Post
 </template>
 
 <style lang="scss" scoped>
-.sign-in-control {
-	position: relative;
-	button {
-		position: absolute;
-	}
-}
-
 .entry-list-enter-active,
 .entry-list-leave-active {
 	transition: all 0.5s;
