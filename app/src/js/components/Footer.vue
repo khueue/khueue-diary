@@ -1,17 +1,20 @@
 <script lang="js">
-import pkg from '../../../package.json';
+import Vuex from 'vuex';
 
 export default {
-	data() {
-		return {
-			appVersion: pkg.version,
-		};
+	name: 'Footer',
+	computed: {
+		...Vuex.mapState({
+			appVersion(state) {
+				return state.packageJson.version;
+			},
+		}),
 	},
-}
+};
 </script>
 
 <template lang="pug">
-.content.has-text-right
+div.content.has-text-right
 	p.version
 		a(href="https://github.com/khueue/khueue-diary") khueue-diary {{ appVersion }}
 </template>

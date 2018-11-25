@@ -1,4 +1,6 @@
 <script lang="js">
+import Vuex from 'vuex';
+
 import firebase from '/js/firebase';
 import db from '/js/firebase/db';
 
@@ -6,51 +8,40 @@ import DiaryPost from '/js/components/DiaryPost.vue';
 
 export default {
 	name: 'DiaryPostList',
-	props: {
-		user: {
-			required: true,
-		},
-	},
-	data() {
-		return {
-			currentUser: null,
-			entries: [],
-			unsubscriber: null,
-			newEntry: null,
-			isAuthoring: false,
-		};
-	},
 	components: {
 		DiaryPost,
 	},
-	watch: {
-		user: {
-			handler: function(newVal, oldVal) {
-				console.log('watch:user', newVal);
-				this.currentUser = newVal;
-			},
-		},
-		currentUser: function(newVal, oldVal) {
-			const self = this;
-			console.log('old and new', oldVal, newVal);
-			if (newVal) {
-				console.log('GOING FOR IT');
-				self.subscribeToFirestoreSnapshots();
-			} else {
-				self.unsubscribeToFirestoreSnapshots();
-			}
-		},
+	data() {
+		return {
+			unsubscriber: null,
+			newEntry: null,
+			isAuthoring: false,
+			postsCollection: null,
+		};
+	},
+	created() {
+		this.subscribeToFirestoreSnapshots();
+	},
+	beforeDestroy() {
+		this.unsubscribeToFirestoreSnapshots();
+	},
+	computed: {
+		...Vuex.mapGetters([
+			'user',
+			'posts',
+		]),
 	},
 	methods: {
-		saveEntry(entry) {
+		savePost(entry) {
 			if (!entry.message) {
-				this.deleteEntry(entry);
+				this.deletePost(entry);
 				return;
 			}
 			const self = this;
-			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
 			if (entry.id) {
-				entriesColl.doc(entry.id).set({
+				self.postsCollection
+				.doc(entry.id)
+				.set({
 					message: entry.message,
 					meta: entry.meta,
 				}).then(function () {
@@ -60,7 +51,8 @@ export default {
 				});
 			} else {
 				self.newEntry = null;
-				entriesColl.add({
+				self.postsCollection
+				.add({
 					message: entry.message,
 					meta: entry.meta,
 				}).then(function (doc) {
@@ -70,13 +62,14 @@ export default {
 				});
 			}
 		},
-		deleteEntry(entry) {
+		deletePost(entry) {
 			if (!entry.id) {
 				return;
 			}
 			const self = this;
-			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
-			entriesColl.doc(entry.id).delete()
+			self.postsCollection
+			.doc(entry.id)
+			.delete()
 			.then(function () {
 				console.log('Deleted!');
 			}).catch(function (error) {
@@ -100,71 +93,63 @@ export default {
 		},
 		subscribeToFirestoreSnapshots() {
 			const self = this;
-			console.log('currentUser', self.currentUser);
-			const entriesColl = db.collection('diary').doc(self.currentUser.uid).collection('posts');
-			self.unsubscriber = entriesColl.orderBy('meta.createdAt', 'asc').limit(100).onSnapshot(function(snapshot) {
-				const entries = [];
+			self.postsCollection = db.collection('diary').doc(self.user.uid).collection('posts');
+			self.unsubscriber = self.postsCollection
+			.orderBy('meta.createdAt', 'desc')
+			.limit(20)
+			.onSnapshot(function(snapshot) {
+				const newPosts = [];
 				snapshot.forEach(function(snap) {
-					const entry = self.newEntryFromSnapshot(snap);
-					entries.push(entry);
+					const newPost = self.newPostFromSnapshot(snap);
+					newPosts.push(newPost);
 				});
-				self.entries = entries;
-				console.log(self.entries.length);
+				console.log(newPosts);
+				self.$store.commit({
+					type: 'setPosts',
+					posts: newPosts,
+				});
 			}, function (error) {
-				console.log(error);
+				console.error(error);
 			});
 		},
 		unsubscribeToFirestoreSnapshots() {
 			const self = this;
 			if (self.unsubscriber) {
 				self.unsubscriber();
+				self.postsCollection = null;
 			}
 		},
-		newEntryFromSnapshot(snap) {
-			const entry = {};
+		newPostFromSnapshot(snap) {
+			const post = {};
 
-			entry.id = snap.id;
+			post.id = snap.id;
 
 			// Use auto-generated version timestamp to help Vue
 			// decide whether to re-render.
 			const version = snap._document.version.timestamp;
-			entry.renderKey = `${snap.id}.${version.seconds}.${version.nanoseconds}`;
+			post.renderKey = `${snap.id}.${version.seconds}.${version.nanoseconds}`;
 
-			entry.message = snap.data().message;
+			post.message = snap.data().message;
 
-			entry.meta = snap.data().meta;
+			post.meta = snap.data().meta;
 
-			return entry;
+			return post;
 		},
 	},
 };
 </script>
 
 <template lang="pug">
-.diary-post-list
-	.wrapper(v-if="user")
-		p(v-if="!entries.length") No entries!
+div.diary-post-list
+		p(v-if="!posts.length") No entries!
 		transition-group(v-else name="entry-list")
 			DiaryPost(
-				v-for="entry in entries"
-				:key="entry.renderKey"
-				:entry="entry"
-				:user="currentUser"
-				@save="saveEntry"
-				@delete-entry="deleteEntry"
+				v-for="post in posts"
+				:key="post.renderKey"
+				:entry="post"
+				@save="savePost"
+				@delete-entry="deletePost"
 			)
-	.p(v-else) Sign in!
-
-	// .wrapper
-	// 	DiaryPost(
-	// 		v-show="isAuthoring"
-	// 		:entry="newEntry"
-	// 		@save="saveEntry"
-	// 		@delete-entry="deleteEntry"
-	// 		@cancel-post="cancelNewPost"
-	// 	)
-	// b-field(v-if="!isAuthoring")
-	// 	button.button(@click="authorNewPost") New Post
 </template>
 
 <style lang="scss" scoped>
@@ -175,6 +160,5 @@ export default {
 .entry-list-enter,
 .entry-list-leave-to {
 	opacity: 0;
-	// transform: translateY(30px);
 }
 </style>

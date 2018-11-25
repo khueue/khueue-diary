@@ -11,21 +11,16 @@ export default {
 			type: Object,
 			required: true,
 		},
-		user: {
-			type: Object,
-			required: true,
-		},
 	},
 	data() {
 		return {
 			...this.entry,
-			currentUser: this.user,
 			isEditing: !this.entry.id,
 			draftMessage: this.entry.message,
 		};
 	},
 	computed: {
-		markdownToHtml() {
+		messageAsHtml() {
 			return converter.makeHtml(this.message);
 		},
 		hasDatabaseId() {
@@ -77,45 +72,50 @@ export default {
 </script>
 
 <template lang="pug">
-.diary-post
-	.card.is-rounded
-		.card-content
-			.viewing(v-if="!isEditing" v-on:dblclick="edit")
-				.markdown-to-html(v-html="markdownToHtml")
-			.editing(v-else)
-				.field
-					.control
+div.diary-post
+	div.card
+		div.card-content
+			div.viewing(v-if="!isEditing" v-on:dblclick="edit")
+				div.markdown-to-html(v-html="messageAsHtml")
+			div.editing(v-else)
+				div.field
+					div.control
 						textarea.textarea(
 							v-model="draftMessage"
 							v-focus="true"
 							@keyup.esc="cancelEdit"
 							@keyup.ctrl.enter="save"
 						) {{ draftMessage }}
-				.field
-					.control
+				div.field
+					div.control
 						button.button.is-primary(@click="save") Save
 						button.button(@click="cancelEdit") Cancel
 						button.button.is-danger.is-pulled-right(v-if="hasDatabaseId" @click="deleteEntry") Delete
-		.card-footer.is-size-7
-			.card-footer-item
-				.media
-					.media-left
+		div.card-footer.is-size-7
+			div.card-footer-item
+				div.media
+					div.media-left
 						figure.image.is-48x48
-							img(:src="currentUser.photoUrl")
-			.card-footer-item
+							img(:src="this.$store.state.user.photoURL")
+			div.card-footer-item
 				p {{ createdAtPretty }}
-			.card-footer-item(v-show="hasBeenEdited")
+			div.card-footer-item(v-show="hasBeenEdited")
 				p(v-show="hasBeenEdited" :title="updatedAtPretty") (updated: {{ updatedAtRelative }})
 </template>
 
 <style lang="scss">
 .diary-post {
 	.markdown-to-html {
-		h1, h2, h3, h4, h5, h6,
-		ul, ol,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		ul,
+		ol,
 		p,
-		pre
-		{
+		pre {
 			margin-bottom: 1rem;
 		}
 		h1 {

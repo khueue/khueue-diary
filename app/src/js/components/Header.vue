@@ -1,13 +1,12 @@
 <script lang="js">
+import Vuex from 'vuex';
+
 export default {
 	name: 'Header',
-	props: {
-		user: {
-			required: true,
-		},
-	},
-	data() {
-		return {};
+	computed: {
+		...Vuex.mapGetters([
+			'user',
+		]),
 	},
 	methods: {
 		signInWithGoogle() {
@@ -17,14 +16,22 @@ export default {
 			this.$emit('sign-out');
 		},
 	},
-}
+};
 </script>
 
 <template lang="pug">
-.content.has-text-right
+div.content.has-text-right
 	transition(mode="out-in")
-		button.button.is-primary(v-if="!user" @click="signInWithGoogle") Sign in
-		button.button.is-primary(v-else @click="signOut") Sign out ({{ user.email }})
+		div.buttons(v-if="!user")
+			a.button.is-primary(@click="signInWithGoogle")
+				span.icon
+					i.fas.fa-sign-in-alt
+				span Sign in
+		div.buttons(v-else)
+			a.button(@click="signOut")
+				span.icon
+					i.fas.fa-sign-out-alt
+				span Sign out ({{ user.email }})
 </template>
 
 <style lang="scss" scoped></style>

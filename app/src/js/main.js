@@ -1,31 +1,16 @@
 import Vue from 'vue';
-import VueRouter from 'vue-router';
-import Buefy from 'buefy';
-import 'buefy/dist/buefy.css';
+import '../../node_modules/@fortawesome/fontawesome-free/js/all.min.js';
 
-Vue.use(Buefy);
-Vue.use(VueRouter);
-Vue.config.productionTip = false;
+import router from '/js/router.js';
+import store from '/js/store.js';
 
 import App from '/js/components/App.vue';
-import DiaryPostList from '/js/components/DiaryPostList.vue';
 
-const router = new VueRouter({
-	mode: 'history',
-	routes: [
-		{
-			path: '/',
-			component: DiaryPostList,
-		},
-		{
-			path: '*',
-			redirect: '/',
-		},
-	],
-});
+Vue.config.productionTip = false;
 
 window.app = new Vue({
 	router,
+	store,
 	render(h) {
 		return h(App);
 	},
