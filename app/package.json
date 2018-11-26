@@ -9,6 +9,7 @@
     "@vue/component-compiler-utils": "2.3.0",
     "@fortawesome/fontawesome-free": "5.5.0",
     "bulma": "0.7.2",
+    "bulmaswatch": "0.7.2",
     "firebase": "5.5.9",
     "moment": "2.22.2",
     "moment-timezone": "0.5.23",

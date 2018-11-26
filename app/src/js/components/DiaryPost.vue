@@ -136,6 +136,6 @@ div.diary-post
 	}
 }
 .textarea {
-	height: 25rem;
+	height: 15rem;
 }
 </style>

@@ -15,6 +15,7 @@ export default {
 		return {
 			unsubscriber: null,
 			newEntry: null,
+			isLoading: true,
 			isAuthoring: false,
 			postsCollection: null,
 		};
@@ -93,6 +94,7 @@ export default {
 		},
 		subscribeToFirestoreSnapshots() {
 			const self = this;
+			self.isLoading = true;
 			self.postsCollection = db.collection('diary').doc(self.user.uid).collection('posts');
 			self.unsubscriber = self.postsCollection
 			.orderBy('meta.createdAt', 'desc')
@@ -108,6 +110,7 @@ export default {
 					type: 'setPosts',
 					posts: newPosts,
 				});
+				self.isLoading = false;
 			}, function (error) {
 				console.error(error);
 			});
@@ -141,7 +144,10 @@ export default {
 
 <template lang="pug">
 div.diary-post-list
-		p(v-if="!posts.length") No entries!
+		p.has-text-centered(v-if="isLoading")
+			span.icon
+				i.fas.fa-spinner.fa-pulse.fa-2x
+		p.has-text-centered(v-else-if="!posts.length") No entries!
 		transition-group(v-else name="entry-list")
 			DiaryPost(
 				v-for="post in posts"

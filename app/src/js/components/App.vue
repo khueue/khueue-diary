@@ -66,7 +66,7 @@ export default {
 		.hero-foot
 			.container
 				.columns.is-centered
-					.column.is-three-quarters
+					.column.has-text-centered
 						Footer
 </template>
 

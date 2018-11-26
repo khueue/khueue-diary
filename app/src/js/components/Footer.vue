@@ -4,6 +4,9 @@ import Vuex from 'vuex';
 export default {
 	name: 'Footer',
 	computed: {
+		...Vuex.mapGetters([
+			'user',
+		]),
 		...Vuex.mapState({
 			appVersion(state) {
 				return state.packageJson.version;
@@ -14,8 +17,8 @@ export default {
 </script>
 
 <template lang="pug">
-div.content.has-text-right
-	p.version
+div.content
+	p.version(v-if="user")
 		a(href="https://github.com/khueue/khueue-diary") khueue-diary {{ appVersion }}
 </template>
 

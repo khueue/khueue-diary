@@ -20,7 +20,7 @@ export default {
 div.diary-view
 	DiaryPostList(v-if="user")
 	div.has-text-centered(v-else)
-		p You are currently signed out!
+		h1.title.is-1 khueue.com
 </template>
 
 <style lang="scss" scoped></style>
