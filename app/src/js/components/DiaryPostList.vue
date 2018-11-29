@@ -145,7 +145,7 @@ export default {
 <template lang="pug">
 div.diary-post-list
 		p.has-text-centered(v-if="isLoading")
-			span.icon
+			span.icon.is-large
 				i.fas.fa-spinner.fa-pulse.fa-2x
 		p.has-text-centered(v-else-if="!posts.length") No entries!
 		transition-group(v-else name="entry-list")

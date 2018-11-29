@@ -75,7 +75,7 @@ export default {
 div.diary-post
 	div.card
 		div.card-content
-			div.viewing(v-if="!isEditing" v-on:dblclick="edit")
+			div.viewing(v-if="!isEditing" @dblclick="edit")
 				div.markdown-to-html(v-html="messageAsHtml")
 			div.editing(v-else)
 				div.field
@@ -96,11 +96,11 @@ div.diary-post
 				div.media
 					div.media-left
 						figure.image.is-48x48
-							img(:src="this.$store.state.user.photoURL")
+							img.is-rounded(:src="this.$store.state.user.photoURL")
 			div.card-footer-item
 				p {{ createdAtPretty }}
 			div.card-footer-item(v-show="hasBeenEdited")
-				p(v-show="hasBeenEdited" :title="updatedAtPretty") (updated: {{ updatedAtRelative }})
+				p(:title="updatedAtPretty") (updated: {{ updatedAtRelative }})
 </template>
 
 <style lang="scss">
@@ -131,9 +131,6 @@ div.diary-post
 }
 .card-footer {
 	margin-top: -1rem;
-	.image {
-		border: 1px solid gray;
-	}
 }
 .textarea {
 	height: 15rem;
