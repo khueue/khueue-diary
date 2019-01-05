@@ -47,26 +47,26 @@ export default {
 </script>
 
 <template lang="pug">
-#app
-	.hero.is-fullheight
-		.hero-head
-			.navbar.is-fixed-top.is-transparent
-				.navbar-menu
-					.navbar-end
+div#app
+	div.hero.is-fullheight
+		div.hero-head
+			div.navbar.is-fixed-top.is-transparent
+				div.navbar-menu
+					div.navbar-end
 						Header(
 							@sign-in-with-google="signInWithGoogle"
 							@sign-out="signOut"
 						)
-		.hero-body
-			.container
-				.columns.is-centered
-					.column.is-three-quarters
+		div.hero-body
+			div.container
+				div.columns.is-centered
+					div.column.is-three-quarters
 						transition(name="view-fade" mode="out-in")
-							router-view()
-		.hero-foot
-			.container
-				.columns.is-centered
-					.column.has-text-centered
+							router-view
+		div.hero-foot
+			div.container
+				div.columns.is-centered
+					div.column.has-text-centered
 						Footer
 </template>
 
