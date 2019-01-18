@@ -1,3 +1,3 @@
 # khueue-diary
 
-WIP. Stuff. More.
+WIP.
